@@ -22,9 +22,6 @@ jobs:
           distribution: 'temurin'
           java-version: '17'
 
-      - name: Setup Android SDK
-        uses: android-actions/setup-android@v3
-
       - name: Generate Debug Keystore
         run: |
           mkdir -p ~/.android
@@ -35,7 +32,6 @@ jobs:
 
       - name: Download & Install Godot and Templates
         run: |
-          # Official Godot 4.3 release build links
           wget -q https://github.com/godotengine/godot-builds/releases/download/${GODOT_VERSION}-stable/Godot_v${GODOT_VERSION}-stable_linux.x86_64.zip
           unzip -q Godot_v${GODOT_VERSION}-stable_linux.x86_64.zip
           sudo mv Godot_v${GODOT_VERSION}-stable_linux.x86_64 /usr/local/bin/godot
@@ -48,12 +44,13 @@ jobs:
 
       - name: Configure Godot Editor Settings
         run: |
+          SDK_PATH="${ANDROID_HOME:-/usr/local/lib/android/sdk}"
           mkdir -p ~/.config/godot
           cat << EOF > ~/.config/godot/editor_settings-4.tres
           [gd_resource type="EditorSettings" format=3]
 
           [resource]
-          export/android/android_sdk_path = "$ANDROID_HOME"
+          export/android/android_sdk_path = "$SDK_PATH"
           export/android/debug_keystore = "$HOME/.android/debug.keystore"
           export/android/debug_keystore_user = "androiddebugkey"
           export/android/debug_keystore_pass = "android"
