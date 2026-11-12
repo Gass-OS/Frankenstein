@@ -35,7 +35,7 @@ jobs:
 
       - name: Download & Install Godot and Templates
         run: |
-          # Correct Godot 4.3 download links
+          # Official Godot 4.3 release build links
           wget -q https://github.com/godotengine/godot-builds/releases/download/${GODOT_VERSION}-stable/Godot_v${GODOT_VERSION}-stable_linux.x86_64.zip
           unzip -q Godot_v${GODOT_VERSION}-stable_linux.x86_64.zip
           sudo mv Godot_v${GODOT_VERSION}-stable_linux.x86_64 /usr/local/bin/godot
@@ -46,11 +46,13 @@ jobs:
           unzip -q Godot_v${GODOT_VERSION}-stable_export_templates.tpz
           mv templates/* ~/.local/share/godot/export_templates/${GODOT_VERSION}.stable/
 
-      - name: Configure Godot Android Settings
+      - name: Configure Godot Editor Settings
         run: |
-          godot --headless --editor --quit || true
           mkdir -p ~/.config/godot
-          cat <<EOF >> ~/.config/godot/editor_settings-4.tres
+          cat << EOF > ~/.config/godot/editor_settings-4.tres
+          [gd_resource type="EditorSettings" format=3]
+
+          [resource]
           export/android/android_sdk_path = "$ANDROID_HOME"
           export/android/debug_keystore = "$HOME/.android/debug.keystore"
           export/android/debug_keystore_user = "androiddebugkey"
@@ -60,10 +62,10 @@ jobs:
       - name: Build Android APK
         run: |
           mkdir -p build/
-          godot --headless --export-debug "${EXPORT_NAME}" build/Frankenstein.apk
+          godot --headless --export-debug "${EXPORT_NAME}" build/KasserineRally.apk
 
       - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: Frankenstein-APK
-          path: build/Frankenstein.apk
+          name: Kasserine-Rally-APK
+          path: build/KasserineRally.apk
