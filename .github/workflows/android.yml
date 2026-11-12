@@ -41,24 +41,80 @@ jobs:
           mkdir -p ~/.local/share/godot/export_templates/${GODOT_VERSION}.stable
           unzip -q Godot_v${GODOT_VERSION}-stable_export_templates.tpz
           mv templates/* ~/.local/share/godot/export_templates/${GODOT_VERSION}.stable/
+          
+          # Also symlink to fallback location
+          mkdir -p ~/.local/share/godot/templates
+          ln -s ~/.local/share/godot/export_templates/${GODOT_VERSION}.stable ~/.local/share/godot/templates/${GODOT_VERSION}.stable || true
 
       - name: Configure Godot Editor Settings
         run: |
-          SDK_PATH="${ANDROID_HOME:-/usr/local/lib/android/sdk}"
           mkdir -p ~/.config/godot
-          cat << EOF > ~/.config/godot/editor_settings-4.tres
-          [gd_resource type="EditorSettings" format=3]
+          cat << 'EOF' > ~/.config/godot/editor_settings-4.tres
+[gd_resource type="EditorSettings" format=3]
 
-          [resource]
-          export/android/android_sdk_path = "$SDK_PATH"
-          export/android/debug_keystore = "$HOME/.android/debug.keystore"
-          export/android/debug_keystore_user = "androiddebugkey"
-          export/android/debug_keystore_pass = "android"
-          EOF
+[resource]
+export/android/android_sdk_path = "/usr/local/lib/android/sdk"
+export/android/debug_keystore = "/home/runner/.android/debug.keystore"
+export/android/debug_keystore_user = "androiddebugkey"
+export/android/debug_keystore_pass = "android"
+EOF
 
-      - name: Build Android APK
+      - name: Generate Export Presets Config
+        run: |
+          cat << 'EOF' > export_presets.cfg
+[preset.0]
+
+name="Android"
+platform="Android"
+runnable=true
+advanced_options=false
+dedicated_server=false
+custom_features=""
+export_filter="all_resources"
+include_filter=""
+exclude_filter=""
+export_path="build/KasserineRally.apk"
+patches=PackedStringArray()
+encryption_include_filters=""
+encryption_exclude_filters=""
+seed=0
+encrypt_pck=false
+encrypt_directory=false
+
+[preset.0.options]
+
+custom_template/debug=""
+custom_template/release=""
+gradle_build/use_gradle_build=false
+gradle_build/min_sdk=""
+gradle_build/target_sdk=""
+architectures/arm64-v8a=true
+architectures/armeabi-v7a=true
+architectures/x86_64=false
+architectures/x86=false
+package/unique_name="com.kasserine.rally"
+package/name="Kasserine Rally"
+package/signed=true
+package/app_category=0
+package/retain_data_on_uninstall=false
+package/exclude_from_recents=false
+package/show_in_launcher=true
+launcher_icons/main_192=""
+launcher_icons/adaptive_foreground_432=""
+launcher_icons/adaptive_background_432=""
+version/code=1
+version/name="1.0"
+keystore/debug="/home/runner/.android/debug.keystore"
+keystore/debug_user="androiddebugkey"
+keystore/debug_password="android"
+EOF
+
+      - name: Import Assets & Build APK
         run: |
           mkdir -p build/
+          # First open editor headless to import files
+          godot --headless --editor --quit || true
+          # Export the APK
           godot --headless --export-debug "${EXPORT_NAME}" build/KasserineRally.apk
 
       - name: Upload APK Artifact
